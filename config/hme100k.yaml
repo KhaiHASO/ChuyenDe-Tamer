@@ -22,6 +22,11 @@ model:
   # encoder
   growth_rate: 24
   num_layers: 16
+  gat_layers: 2
+  gat_heads: 4
+  gat_dropout: 0.1
+  gat_ff_multiplier: 2.0
+  gat_kernel_size: 3
   # decoder
   nhead: 8
   num_decoder_layers: 3

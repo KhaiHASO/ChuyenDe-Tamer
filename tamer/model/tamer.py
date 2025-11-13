@@ -16,6 +16,11 @@ class TAMER(pl.LightningModule):
         d_model: int,
         growth_rate: int,
         num_layers: int,
+        gat_layers: int,
+        gat_heads: int,
+        gat_dropout: float,
+        gat_ff_multiplier: float,
+        gat_kernel_size: int,
         nhead: int,
         num_decoder_layers: int,
         dim_feedforward: int,
@@ -28,7 +33,14 @@ class TAMER(pl.LightningModule):
         super().__init__()
 
         self.encoder = Encoder(
-            d_model=d_model, growth_rate=growth_rate, num_layers=num_layers
+            d_model=d_model,
+            growth_rate=growth_rate,
+            num_layers=num_layers,
+            gat_layers=gat_layers,
+            gat_heads=gat_heads,
+            gat_dropout=gat_dropout,
+            gat_ff_multiplier=gat_ff_multiplier,
+            gat_kernel_size=gat_kernel_size,
         )
         self.decoder = Decoder(
             d_model=d_model,

@@ -7,6 +7,7 @@
 
 ## News
 [2024/12/10] TAMER has been accepted to AAAI 2025! 🎉🎉🎉
+[2025/11/13] Encoder upgraded with optional Grid-based Graph Attention Network (GAT) layers for richer structural reasoning.
 
 ## Project structure
 ```bash
@@ -66,6 +67,7 @@ Next, navigate to TAMER folder and run `train.py`. It may take **8~9** hours on 
 # train TAMER model using 4 gpus and ddp on CROHME dataset
 python -u train.py --config config/crohme.yaml
 ```
+> **New**: the configs now expose `gat_layers`, `gat_heads`, `gat_dropout`, `gat_ff_multiplier`, and `gat_kernel_size` for enabling the Grid-GAT encoder refinement. Set `gat_layers: 0` to recover the previous behaviour without graph attention.
 
 For single gpu user, you may change the `config.yaml` file to
 ```yaml

@@ -9,6 +9,7 @@ from einops.einops import rearrange
 from torch import FloatTensor, LongTensor
 
 from .pos_enc import ImgPosEnc
+from .gat import GridGAT
 
 
 # DenseNet-B
@@ -145,13 +146,34 @@ class DenseNet(nn.Module):
 
 
 class Encoder(pl.LightningModule):
-    def __init__(self, d_model: int, growth_rate: int, num_layers: int):
+    def __init__(
+        self,
+        d_model: int,
+        growth_rate: int,
+        num_layers: int,
+        gat_layers: int = 0,
+        gat_heads: int = 4,
+        gat_dropout: float = 0.1,
+        gat_ff_multiplier: float = 2.0,
+        gat_kernel_size: int = 3,
+    ):
         super().__init__()
 
         self.model = DenseNet(growth_rate=growth_rate, num_layers=num_layers)
 
         self.feature_proj = nn.Conv2d(
             self.model.out_channels, d_model, kernel_size=1)
+
+        self.use_gat = gat_layers > 0
+        if self.use_gat:
+            self.gat = GridGAT(
+                d_model=d_model,
+                num_layers=gat_layers,
+                num_heads=gat_heads,
+                dropout=gat_dropout,
+                ff_multiplier=gat_ff_multiplier,
+                attn_kernel_size=gat_kernel_size,
+            )
 
         self.pos_enc_2d = ImgPosEnc(d_model, normalize=True)
 
@@ -174,12 +196,17 @@ class Encoder(pl.LightningModule):
         Tuple[FloatTensor, LongTensor]
             [b, h, w, d], [b, h, w]
         """
+        img_mask = img_mask.bool()
         # extract feature
         feature, mask = self.model(img, img_mask)
         feature = self.feature_proj(feature)
 
         # proj
         feature = rearrange(feature, "b d h w -> b h w d")
+        feature = feature.masked_fill(mask.unsqueeze(-1), 0.0)
+
+        if self.use_gat:
+            feature = self.gat(feature, mask)
 
         # positional encoding
         feature = self.pos_enc_2d(feature, mask)

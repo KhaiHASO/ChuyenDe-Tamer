@@ -20,6 +20,11 @@ class LitTAMER(pl.LightningModule):
         # encoder
         growth_rate: int,
         num_layers: int,
+        gat_layers: int = 0,
+        gat_heads: int = 4,
+        gat_dropout: float = 0.1,
+        gat_ff_multiplier: float = 2.0,
+        gat_kernel_size: int = 3,
         # decoder
         nhead: int,
         num_decoder_layers: int,
@@ -47,6 +52,11 @@ class LitTAMER(pl.LightningModule):
             d_model=d_model,
             growth_rate=growth_rate,
             num_layers=num_layers,
+            gat_layers=gat_layers,
+            gat_heads=gat_heads,
+            gat_dropout=gat_dropout,
+            gat_ff_multiplier=gat_ff_multiplier,
+            gat_kernel_size=gat_kernel_size,
             nhead=nhead,
             num_decoder_layers=num_decoder_layers,
             dim_feedforward=dim_feedforward,
