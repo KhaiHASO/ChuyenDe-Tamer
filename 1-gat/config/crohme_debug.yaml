@@ -1,0 +1,52 @@
+seed_everything: 7
+
+trainer:
+  checkpoint_callback: false        # debug không cần lưu model
+  logger:
+    class_path: pytorch_lightning.loggers.CSVLogger
+    init_args:
+      save_dir: lightning_logs_debug
+      name: debug_run
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: epoch
+  gpus: 1
+  accelerator: auto
+  check_val_every_n_epoch: 1
+  max_epochs: 2                    # epoch nhỏ để test nhanh
+  deterministic: true
+  precision: 16                    # không dùng FP16 để tránh lỗi AMP
+
+model:
+  d_model: 256
+  growth_rate: 24
+  num_layers: 4                    # nhẹ hơn cho debug
+  nhead: 4                         # nhỏ hơn
+  num_decoder_layers: 1
+  dim_feedforward: 512
+  dc: 16
+  dropout: 0.3
+  vocab_size: 113
+  cross_coverage: true
+  self_coverage: true
+  beam_size: 3
+  max_len: 80
+  alpha: 1.0
+  early_stopping: false
+  temperature: 1.0
+  learning_rate: 0.5
+  patience: 5
+  milestones:
+    - 2
+    - 4
+
+data:
+  folder: data/crohme
+  test_folder: 2014
+  max_size: 160000                # giảm kích thước ảnh
+  scale_to_limit: true
+  train_batch_size: 2            # nhỏ để debug GPU
+  eval_batch_size: 1
+  num_workers: 0                 # tránh bug multiprocessing
+  scale_aug: false

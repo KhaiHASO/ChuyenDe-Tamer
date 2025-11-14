@@ -1,0 +1,101 @@
+seed_everything: 7
+trainer:
+  logger:
+    class_path: pytorch_lightning.loggers.CSVLogger
+    init_args:
+      save_dir: lightning_logs_debug
+      name: debug_run
+      version: null
+      prefix: ''
+  checkpoint_callback: false
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    init_args:
+      logging_interval: epoch
+      log_momentum: false
+  default_root_dir: null
+  gradient_clip_val: 0.0
+  gradient_clip_algorithm: norm
+  process_position: 0
+  num_nodes: 1
+  num_processes: 1
+  devices: null
+  gpus: 1
+  auto_select_gpus: false
+  tpu_cores: null
+  ipus: null
+  log_gpu_memory: null
+  progress_bar_refresh_rate: null
+  overfit_batches: 0.0
+  track_grad_norm: -1
+  check_val_every_n_epoch: 1
+  fast_dev_run: false
+  accumulate_grad_batches: 1
+  max_epochs: 2
+  min_epochs: null
+  max_steps: null
+  min_steps: null
+  max_time: null
+  limit_train_batches: 1.0
+  limit_val_batches: 1.0
+  limit_test_batches: 1.0
+  limit_predict_batches: 1.0
+  val_check_interval: 1.0
+  flush_logs_every_n_steps: 100
+  log_every_n_steps: 50
+  accelerator: auto
+  sync_batchnorm: false
+  precision: 16
+  weights_summary: top
+  weights_save_path: null
+  num_sanity_val_steps: 2
+  truncated_bptt_steps: null
+  resume_from_checkpoint: null
+  profiler: null
+  benchmark: false
+  deterministic: true
+  reload_dataloaders_every_n_epochs: 0
+  reload_dataloaders_every_epoch: false
+  auto_lr_find: false
+  replace_sampler_ddp: true
+  terminate_on_nan: false
+  auto_scale_batch_size: false
+  prepare_data_per_node: true
+  plugins: <pytorch_lightning.plugins.training_type.ddp.DDPPlugin object at 0x798b74d60490>
+  amp_backend: native
+  amp_level: O2
+  distributed_backend: null
+  move_metrics_to_cpu: false
+  multiple_trainloader_mode: max_size_cycle
+  stochastic_weight_avg: false
+model:
+  d_model: 256
+  growth_rate: 24
+  num_layers: 4
+  nhead: 4
+  num_decoder_layers: 1
+  dim_feedforward: 512
+  dropout: 0.3
+  dc: 16
+  cross_coverage: true
+  self_coverage: true
+  beam_size: 3
+  max_len: 80
+  alpha: 1.0
+  early_stopping: false
+  temperature: 1.0
+  learning_rate: 0.5
+  patience: 5
+  milestones:
+  - 2
+  - 4
+  vocab_size: 113
+data:
+  folder: data/crohme
+  test_folder: '2014'
+  max_size: 160000
+  scale_to_limit: true
+  train_batch_size: 2
+  eval_batch_size: 1
+  num_workers: 0
+  scale_aug: false
