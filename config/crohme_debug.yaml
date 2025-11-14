@@ -16,7 +16,7 @@ trainer:
   check_val_every_n_epoch: 1
   max_epochs: 2                    # epoch nhỏ để test nhanh
   deterministic: true
-  precision: 32                    # không dùng FP16 để tránh lỗi AMP
+  precision: 16                    # không dùng FP16 để tránh lỗi AMP
 
 model:
   d_model: 256
