@@ -9,6 +9,7 @@ from einops.einops import rearrange
 from torch import FloatTensor, LongTensor
 
 from .pos_enc import ImgPosEnc
+from .gat import GAT
 
 
 # DenseNet-B
@@ -145,7 +146,17 @@ class DenseNet(nn.Module):
 
 
 class Encoder(pl.LightningModule):
-    def __init__(self, d_model: int, growth_rate: int, num_layers: int):
+    def __init__(
+        self,
+        d_model: int,
+        growth_rate: int,
+        num_layers: int,
+        use_gat: bool = False,
+        gat_num_layers: int = 2,
+        gat_num_heads: int = 8,
+        gat_hidden_dim: int = None,
+        gat_dropout: float = 0.1,
+    ):
         super().__init__()
 
         self.model = DenseNet(growth_rate=growth_rate, num_layers=num_layers)
@@ -155,7 +166,68 @@ class Encoder(pl.LightningModule):
 
         self.pos_enc_2d = ImgPosEnc(d_model, normalize=True)
 
+        self.use_gat = use_gat
+        if use_gat:
+            gat_hidden_dim = gat_hidden_dim or d_model
+            self.gat = GAT(
+                in_features=d_model,
+                hidden_features=gat_hidden_dim,
+                out_features=d_model,
+                num_layers=gat_num_layers,
+                num_heads=gat_num_heads,
+                dropout=gat_dropout,
+            )
+
         self.norm = nn.LayerNorm(d_model)
+
+    def _build_grid_adjacency(self, mask: LongTensor) -> LongTensor:
+        """Build grid adjacency matrix from mask
+        
+        Parameters
+        ----------
+        mask : LongTensor
+            [b, h, w] where 0 is valid, 1 is padding
+        
+        Returns
+        -------
+        LongTensor
+            [b, n_nodes, n_nodes] adjacency matrix (1 for connected, 0 for not)
+        """
+        b, h, w = mask.shape
+        n_nodes = h * w
+        
+        # Create grid adjacency (4-connected: up, down, left, right)
+        adj = torch.zeros(b, n_nodes, n_nodes, dtype=torch.long, device=mask.device)
+        
+        for i in range(h):
+            for j in range(w):
+                node_idx = i * w + j
+                
+                # Right neighbor
+                if j < w - 1:
+                    right_idx = i * w + (j + 1)
+                    adj[:, node_idx, right_idx] = 1
+                    adj[:, right_idx, node_idx] = 1
+                
+                # Down neighbor
+                if i < h - 1:
+                    down_idx = (i + 1) * w + j
+                    adj[:, node_idx, down_idx] = 1
+                    adj[:, down_idx, node_idx] = 1
+        
+        # Mask out padding nodes (set their connections to 0)
+        mask_flat = mask.view(b, n_nodes)  # [b, n_nodes]
+        padding_mask = (mask_flat == 1)  # True for padding
+        adj = adj.masked_fill(padding_mask.unsqueeze(1), 0)
+        adj = adj.masked_fill(padding_mask.unsqueeze(2), 0)
+        
+        # Self-connections for valid nodes
+        valid_mask = (mask_flat == 0)  # True for valid
+        for b_idx in range(b):
+            valid_indices = valid_mask[b_idx].nonzero(as_tuple=False).squeeze(-1)
+            adj[b_idx, valid_indices, valid_indices] = 1
+        
+        return adj
 
     def forward(
         self, img: FloatTensor, img_mask: LongTensor
@@ -184,6 +256,19 @@ class Encoder(pl.LightningModule):
         # positional encoding
         feature = self.pos_enc_2d(feature, mask)
         feature = self.norm(feature)
+
+        # Apply GAT if enabled
+        if self.use_gat:
+            b, h, w, d = feature.shape
+            # Flatten to [b, n_nodes, d]
+            feature_flat = feature.view(b, h * w, d)
+            # Build adjacency matrix
+            adj = self._build_grid_adjacency(mask)
+            # Apply GAT
+            feature_flat = self.gat(feature_flat, adj)
+            # Reshape back to [b, h, w, d]
+            feature = feature_flat.view(b, h, w, d)
+            feature = self.norm(feature)
 
         # flat to 1-D
         return feature, mask

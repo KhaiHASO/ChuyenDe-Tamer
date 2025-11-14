@@ -31,6 +31,12 @@ model:
   vocab_size: 248  # 245 + 3
   cross_coverage: true
   self_coverage: true
+  # GAT (Graph Attention Network) - optional
+  use_gat: false  # Set to true to enable GAT layers
+  gat_num_layers: 2
+  gat_num_heads: 8
+  gat_hidden_dim: null  # null means use d_model
+  gat_dropout: 0.1
   # beam search
   beam_size: 10
   max_len: 200

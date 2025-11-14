@@ -24,11 +24,24 @@ class TAMER(pl.LightningModule):
         cross_coverage: bool,
         self_coverage: bool,
         vocab_size: int = 114,
+        # GAT parameters (optional, backward compatible)
+        use_gat: bool = False,
+        gat_num_layers: int = 2,
+        gat_num_heads: int = 8,
+        gat_hidden_dim: int = None,
+        gat_dropout: float = 0.1,
     ):
         super().__init__()
 
         self.encoder = Encoder(
-            d_model=d_model, growth_rate=growth_rate, num_layers=num_layers
+            d_model=d_model,
+            growth_rate=growth_rate,
+            num_layers=num_layers,
+            use_gat=use_gat,
+            gat_num_layers=gat_num_layers,
+            gat_num_heads=gat_num_heads,
+            gat_hidden_dim=gat_hidden_dim,
+            gat_dropout=gat_dropout,
         )
         self.decoder = Decoder(
             d_model=d_model,

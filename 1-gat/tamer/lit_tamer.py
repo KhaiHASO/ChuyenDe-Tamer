@@ -39,6 +39,12 @@ class LitTAMER(pl.LightningModule):
         patience: int,
         milestones: List[int] = [40, 55],
         vocab_size: int = 113,
+        # GAT parameters (optional, backward compatible)
+        use_gat: bool = False,
+        gat_num_layers: int = 2,
+        gat_num_heads: int = 8,
+        gat_hidden_dim: int = None,
+        gat_dropout: float = 0.1,
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -55,6 +61,11 @@ class LitTAMER(pl.LightningModule):
             cross_coverage=cross_coverage,
             self_coverage=self_coverage,
             vocab_size=vocab_size,
+            use_gat=use_gat,
+            gat_num_layers=gat_num_layers,
+            gat_num_heads=gat_num_heads,
+            gat_hidden_dim=gat_hidden_dim,
+            gat_dropout=gat_dropout,
         )
 
         self.exprate_recorder = ExpRateRecorder()
