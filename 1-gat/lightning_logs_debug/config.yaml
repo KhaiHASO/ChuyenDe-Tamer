@@ -61,7 +61,7 @@ trainer:
   terminate_on_nan: false
   auto_scale_batch_size: false
   prepare_data_per_node: true
-  plugins: <pytorch_lightning.plugins.training_type.ddp.DDPPlugin object at 0x798b74d60490>
+  plugins: <pytorch_lightning.plugins.training_type.ddp.DDPPlugin object at 0x737093be8a50>
   amp_backend: native
   amp_level: O2
   distributed_backend: null
@@ -90,6 +90,11 @@ model:
   - 2
   - 4
   vocab_size: 113
+  use_gat: false
+  gat_num_layers: 2
+  gat_num_heads: 8
+  gat_hidden_dim: null
+  gat_dropout: 0.1
 data:
   folder: data/crohme
   test_folder: '2014'
