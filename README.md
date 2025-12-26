@@ -241,19 +241,5 @@ Dự án hỗ trợ:
 - Model checkpoint tốt nhất được chọn dựa trên `val_ExpRate`
 - Sử dụng seed=7 để đảm bảo reproducibility
 
-## 👥 Tác giả
 
-- Jianhua Zhu (zhujianhuapku@pku.edu.cn)
-
-## 📄 License
-
-Xem file LICENSE để biết thêm chi tiết.
-
-## 🙏 Citation
-
-Nếu sử dụng code này trong nghiên cứu, vui lòng trích dẫn paper gốc của TAMER.
-
----
-
-**Lưu ý**: Đảm bảo bạn đã tải và đặt dữ liệu vào đúng thư mục trước khi training hoặc evaluation.
 
