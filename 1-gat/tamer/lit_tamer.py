@@ -111,7 +111,7 @@ class LitTAMER(pl.LightningModule):
         return loss + struct_loss
 
 
-    def validation_step(self, batch: Batch, batch_idx):
+    def validation_step(self, batch: Batch, _):
         tgt, out = to_bi_tgt_out(batch.indices, self.device)
         struct_out, _ = to_struct_output(batch.indices, self.device)
         out_hat, sim = self(batch.imgs, batch.mask, tgt)
@@ -136,7 +136,6 @@ class LitTAMER(pl.LightningModule):
         )
 
         # Log images with predictions to WandB
-        # Only log first batch of every epoch or every N epochs to save bandwidth
         if batch_idx == 0:
             columns = ["image", "ground_truth", "prediction"]
             data = []
@@ -149,16 +148,19 @@ class LitTAMER(pl.LightningModule):
             # Limit to 8 samples
             for i in range(min(len(batch.imgs), 8)):
                 img = batch.imgs[i].cpu().numpy().transpose(1, 2, 0)
-                # Normalize/Scale image for display if needed (assuming it is 0-1 or something reasonable)
-                # Convert prediction list to string
                 pred_str = " ".join(preds[i])
                 gt_str = " ".join(gts[i])
                 
                 data.append([wandb.Image(img), gt_str, pred_str])
             
-            self.logger.experiment.log({
-                "val_predictions": wandb.Table(columns=columns, data=data)
-            })
+            # Log table to wandb
+            if hasattr(self.logger, 'experiment') and hasattr(self.logger.experiment, 'log'):
+                try:
+                    self.logger.experiment.log({
+                        "val_predictions": wandb.Table(columns=columns, data=data)
+                    })
+                except Exception:
+                    pass
 
         # if self.current_epoch < self.hparams.milestones[0]:
         #     self.log(
