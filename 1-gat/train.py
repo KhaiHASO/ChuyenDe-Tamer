@@ -32,19 +32,32 @@ if WANDB_API_KEY:
 
 
 def cli_main():
-    # Chỉ log model khi nó lọt top tốt nhất (dựa trên config checkpoint)
+    # 1. Logger
     wandb_logger = WandbLogger(project="TAMER-Kaggle", log_model=True)
     
+    # 2. Checkpoint
+    checkpoint_callback = ModelCheckpoint(
+        dirpath="/kaggle/working/lightning",
+        filename="crohme-{epoch:02d}-{val_ExpRate:.4f}",
+        save_top_k=3,
+        monitor="val_ExpRate",
+        mode="max",
+        save_last=True
+    )
+
     cli = LightningCLI(
         LitTAMER,
         HMEDatamodule,
+        save_config_callback=None, # <--- QUAN TRỌNG: Thêm dòng này để tắt lỗi AssertionError
         save_config_overwrite=True,
         trainer_defaults={
             "plugins": DDPPlugin(find_unused_parameters=True),
             "logger": wandb_logger,
-            "log_every_n_steps": 50, # Log more frequently
+            "callbacks": [checkpoint_callback],
+            "log_every_n_steps": 20,
+            # Thêm dòng này để ép chạy DDP chuẩn (tránh warning ddp_spawn)
+            "strategy": "ddp", 
         },
     )
-
 if __name__ == "__main__":
     cli_main()
