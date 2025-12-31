@@ -111,7 +111,7 @@ class LitTAMER(pl.LightningModule):
         return loss + struct_loss
 
 
-    def validation_step(self, batch: Batch, _):
+    def validation_step(self, batch: Batch, batch_idx):
         tgt, out = to_bi_tgt_out(batch.indices, self.device)
         struct_out, _ = to_struct_output(batch.indices, self.device)
         out_hat, sim = self(batch.imgs, batch.mask, tgt)
