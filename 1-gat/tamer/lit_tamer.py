@@ -4,6 +4,7 @@ import editdistance
 import json
 import pytorch_lightning as pl
 import torch
+import wandb
 import torch.optim as optim
 from torch import FloatTensor, LongTensor
 
@@ -133,6 +134,31 @@ class LitTAMER(pl.LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
+
+        # Log images with predictions to WandB
+        # Only log first batch of every epoch or every N epochs to save bandwidth
+        if batch_idx == 0:
+            columns = ["image", "ground_truth", "prediction"]
+            data = []
+            
+            # Use beam search for higher quality predictions to visualize
+            hyps = self.approximate_joint_search(batch.imgs, batch.mask)
+            preds = [vocab.indices2words(h.seq) for h in hyps]
+            gts = [vocab.indices2words(ind) for ind in batch.indices]
+            
+            # Limit to 8 samples
+            for i in range(min(len(batch.imgs), 8)):
+                img = batch.imgs[i].cpu().numpy().transpose(1, 2, 0)
+                # Normalize/Scale image for display if needed (assuming it is 0-1 or something reasonable)
+                # Convert prediction list to string
+                pred_str = " ".join(preds[i])
+                gt_str = " ".join(gts[i])
+                
+                data.append([wandb.Image(img), gt_str, pred_str])
+            
+            self.logger.experiment.log({
+                "val_predictions": wandb.Table(columns=columns, data=data)
+            })
 
         # if self.current_epoch < self.hparams.milestones[0]:
         #     self.log(
