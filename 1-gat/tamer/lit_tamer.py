@@ -220,6 +220,17 @@ class LitTAMER(pl.LightningModule):
         with open("predictions.json", "w") as f:
             json.dump(predictions_dict, f)
 
+        # Upload results to WandB
+        if hasattr(self.logger, 'experiment') and hasattr(self.logger.experiment, 'save'):
+            try:
+                # Save essential result files
+                self.logger.experiment.save("result.zip", policy="now")
+                self.logger.experiment.save("errors.json", policy="now")
+                self.logger.experiment.save("predictions.json", policy="now")
+                print("Uploaded result.zip, errors.json, and predictions.json to WandB.")
+            except Exception as e:
+                print(f"Failed to upload results to WandB: {e}")
+
     def approximate_joint_search(
         self, img: FloatTensor, mask: LongTensor
     ) -> List[Hypothesis]:
